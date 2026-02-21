@@ -23,6 +23,21 @@ const Upload = ({ onComplete }: UploadProps) => {
     };
   }, []);
 
+  const base64Ref = useRef<string>('');
+
+  // Completion side effects live outside the state updater
+  useEffect(() => {
+    if (progress === 100) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      timeoutRef.current = setTimeout(() => {
+        onComplete?.(base64Ref.current);
+      }, REDIRECT_DELAY_MS);
+    }
+  }, [progress, onComplete]);
+
   const processFile = useCallback(
     (selectedFile: File) => {
       if (!isSignedIn) return;
@@ -37,27 +52,17 @@ const Upload = ({ onComplete }: UploadProps) => {
         setProgress(0);
       };
 
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
+      reader.onload = () => {
+        base64Ref.current = reader.result as string;
 
         intervalRef.current = setInterval(() => {
-          setProgress((prev) => {
-            const next = prev + PROGRESS_INCREMENT;
-            if (next >= 100) {
-              clearInterval(intervalRef.current!);
-              timeoutRef.current = setTimeout(() => {
-                onComplete?.(base64);
-              }, REDIRECT_DELAY_MS);
-              return 100;
-            }
-            return next;
-          });
+          setProgress((prev) => Math.min(prev + PROGRESS_INCREMENT, 100));
         }, PROGRESS_INTERVAL_MS);
       };
 
       reader.readAsDataURL(selectedFile);
     },
-    [isSignedIn, onComplete],
+    [isSignedIn],
   );
 
   const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
