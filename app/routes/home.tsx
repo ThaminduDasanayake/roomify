@@ -4,8 +4,8 @@ import { ArrowRight, ArrowUpRight, Clock, Layers } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Upload from '../../components/ui/Upload';
 import { useNavigate } from 'react-router';
-import { useRef, useState } from 'react';
-import { createProject } from '../../lib/puter.action';
+import { useEffect, useRef, useState } from 'react';
+import { createProject, getProjects } from '../../lib/puter.action';
 
 export function meta({}: Route.MetaArgs) {
   return [
@@ -17,7 +17,6 @@ export function meta({}: Route.MetaArgs) {
 export default function Home() {
   const navigate = useNavigate();
   const [projects, setProjects] = useState<DesignItem[]>([]);
-
   const isProcessing = useRef(false);
 
   const handleUploadComplete = async (base64Image: string) => {
@@ -58,6 +57,12 @@ export default function Home() {
       isProcessing.current = false;
     }
   };
+
+  useEffect(() => {
+    const fetchProjects = async () => {
+      const items = await getProjects();
+    };
+  }, []);
 
   return (
     <div className="home ">
