@@ -17,7 +17,7 @@ export const getCurrentUser = async () => {
 export const createProject = async ({
   item,
   visibility = 'private',
-}: CreateProjectParams): Promise<DesignItem | null | undefined> => {
+}: CreateProjectParams): Promise<DesignItem | null> => {
   const projectId = item.id;
 
   const hosting = await getOrCreateHostingConfig();

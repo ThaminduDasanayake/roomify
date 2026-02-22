@@ -23,7 +23,7 @@ export const getOrCreateHostingConfig = async (): Promise<HostingConfig | null> 
 
     return record;
   } catch (error) {
-    console.warn(`Could not find subdomain: ${error}`);
+    console.warn(`Failed to create hosting subdomain: ${error}`);
     return null;
   }
 };
@@ -62,5 +62,6 @@ export const uploadImageToHosting = async ({
     return hostedUrl ? { url: hostedUrl } : null;
   } catch (error) {
     console.warn(`Failed to store hosted image: ${error}`);
+    return null;
   }
 };

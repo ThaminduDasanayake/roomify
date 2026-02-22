@@ -28,9 +28,6 @@ export default function Home() {
       const newId = Date.now().toString();
       const name = `Residence ${newId}`;
 
-      console.log('ID: ', newId);
-      console.log('Name: ', name);
-
       const newItem = {
         id: newId,
         name,
@@ -51,7 +48,7 @@ export default function Home() {
       navigate(`/visualizer/${newId}`, {
         state: {
           initialImage: saved.sourceImage,
-          initialRendered: saved.renderedImage || null,
+          initialRender: saved.renderedImage || null,
           name,
         },
       });
@@ -119,33 +116,37 @@ export default function Home() {
           </div>
 
           <div className="projects-grid">
-            {projects.map(({ id, name, renderedImage, sourceImage, timestamp }) => (
-              <div key={id} className="project-card group">
-                <div className="preview">
-                  <img src={renderedImage || sourceImage} alt="Project" />
+            {projects.map(
+              ({ id, name, renderedImage, sourceImage, timestamp, sharedBy, isPublic }) => (
+                <div key={id} className="project-card group">
+                  <div className="preview">
+                    <img src={renderedImage || sourceImage} alt="Project" />
 
-                  <div className="badge">
-                    <span>Community</span>
+                    {isPublic && (
+                      <div className="badge">
+                        <span>Community</span>
+                      </div>
+                    )}
                   </div>
-                </div>
 
-                <div className="card-body">
-                  <div>
-                    <h3>{name}</h3>
+                  <div className="card-body">
+                    <div>
+                      <h3>{name}</h3>
 
-                    <div className="meta">
-                      <Clock size={12} />
-                      <span>{new Date(timestamp).toLocaleDateString()}</span>
-                      <span>By JSM</span>
+                      <div className="meta">
+                        <Clock size={12} />
+                        <span>{new Date(timestamp).toLocaleDateString()}</span>
+                        <span>{sharedBy || 'Unknown User'}</span>
+                      </div>
+                    </div>
+
+                    <div className="arrow">
+                      <ArrowUpRight size={18} />
                     </div>
                   </div>
-
-                  <div className="arrow">
-                    <ArrowUpRight size={18} />
-                  </div>
                 </div>
-              </div>
-            ))}
+              ),
+            )}
           </div>
         </div>
       </section>
