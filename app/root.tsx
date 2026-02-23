@@ -35,6 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="puter-app-id" content="app-b11828e9-2643-4285-b4d9-289f8b238d3b" />
         <Meta />
         <Links />
       </head>
