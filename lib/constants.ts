@@ -7,6 +7,9 @@ export const STORAGE_PATHS = {
   RENDERS: 'roomify/renders',
 } as const;
 
+// File size
+export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 // Timing Constants (in milliseconds)
 export const SHARE_STATUS_RESET_DELAY_MS = 1500;
 export const PROGRESS_INCREMENT = 15;

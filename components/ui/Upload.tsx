@@ -1,7 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router';
 import { CheckCircle2, ImageIcon, UploadIcon } from 'lucide-react';
-import { PROGRESS_INCREMENT, PROGRESS_INTERVAL_MS, REDIRECT_DELAY_MS } from '../../lib/constants';
+import {
+  MAX_FILE_SIZE,
+  PROGRESS_INCREMENT,
+  PROGRESS_INTERVAL_MS,
+  REDIRECT_DELAY_MS,
+} from '../../lib/constants';
 
 interface UploadProps {
   onComplete?: (base64: string) => void;
@@ -11,69 +16,76 @@ const Upload = ({ onComplete }: UploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const { isSignedIn } = useOutletContext<AuthContext>();
 
   useEffect(() => {
     return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-      if (timeoutRef.current) clearTimeout(timeoutRef.current);
-    };
-  }, []);
-
-  const base64Ref = useRef<string>('');
-
-  // Completion side effects live outside the state updater
-  useEffect(() => {
-    if (progress === 100) {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      timeoutRef.current = setTimeout(() => {
-        onComplete?.(base64Ref.current);
-      }, REDIRECT_DELAY_MS);
-    }
-  }, [progress, onComplete]);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
 
   const processFile = useCallback(
-    (selectedFile: File) => {
+    (file: File) => {
       if (!isSignedIn) return;
 
-      setFile(selectedFile);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+      if (file.size > MAX_FILE_SIZE) {
+        setError('File is too large. Please upload an image under 10MB.');
+        return;
+      }
+
+      setError(null);
+      setFile(file);
       setProgress(0);
 
       const reader = new FileReader();
-
       reader.onerror = () => {
+        setError('Failed to read the file. Please try again.');
         setFile(null);
         setProgress(0);
       };
 
       reader.onload = () => {
-        base64Ref.current = reader.result as string;
+        const base64Data = reader.result as string;
 
         intervalRef.current = setInterval(() => {
-          setProgress((prev) => Math.min(prev + PROGRESS_INCREMENT, 100));
+          setProgress((prev) => {
+            const next = prev + PROGRESS_INCREMENT;
+            if (next >= 100) {
+              if (intervalRef.current) {
+                clearInterval(intervalRef.current);
+                intervalRef.current = null;
+              }
+              timeoutRef.current = setTimeout(() => {
+                onComplete?.(base64Data);
+                timeoutRef.current = null;
+              }, REDIRECT_DELAY_MS);
+              return 100;
+            }
+            return next;
+          });
         }, PROGRESS_INTERVAL_MS);
       };
-
-      reader.readAsDataURL(selectedFile);
+      reader.readAsDataURL(file);
     },
-    [isSignedIn],
+    [isSignedIn, onComplete],
   );
 
-  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg'];
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!isSignedIn) return;
-    const selectedFile = e.target.files?.[0];
-    if (selectedFile && allowedTypes.includes(selectedFile.type)) {
-      processFile(selectedFile);
-    }
-  };
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -95,6 +107,18 @@ const Upload = ({ onComplete }: UploadProps) => {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && allowedTypes.includes(droppedFile.type)) {
       processFile(droppedFile);
+    } else {
+      setError('Invalid file type. Please upload a JPG, PNG, or WEBP.');
+    }
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!isSignedIn) return;
+    const selectedFile = e.target.files?.[0];
+    if (selectedFile && allowedTypes.includes(selectedFile.type)) {
+      processFile(selectedFile);
+    } else {
+      setError('Invalid file type. Please upload a JPG, PNG, or WEBP.');
     }
   };
 
@@ -110,7 +134,7 @@ const Upload = ({ onComplete }: UploadProps) => {
           <input
             type="file"
             className="drop-input"
-            accept=".jpg, .jpeg, .png"
+            accept=".jpg, .jpeg, .png, .webp"
             disabled={!isSignedIn}
             onChange={handleChange}
           />
@@ -126,7 +150,9 @@ const Upload = ({ onComplete }: UploadProps) => {
                 : 'Sign in or sign up with Puter to upload'}
             </p>
 
-            <p className="help">Maximum file size 50MB.</p>
+            <p className="help">Maximum file size 10MB.</p>
+
+            {error && <p className="text-red-500 text-xs font-semibold">{error}</p>}
           </div>
         </div>
       ) : (
