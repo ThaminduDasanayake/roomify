@@ -68,7 +68,7 @@ const Upload = ({ onComplete }: UploadProps) => {
     [isSignedIn, onComplete],
   );
 
-  const allowedTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+  const allowedTypes = ['image/png', 'image/jpeg', 'image/webp'];
 
   const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault();
@@ -129,7 +129,7 @@ const Upload = ({ onComplete }: UploadProps) => {
                 : 'Sign in or sign up with Puter to upload'}
             </p>
 
-            <p className="help">Maximum file size 50MB.</p>
+            <p className="help">Maximum file size 10MB.</p>
           </div>
         </div>
       ) : (

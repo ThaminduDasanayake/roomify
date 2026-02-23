@@ -24,9 +24,12 @@ const VisualizerId = () => {
   const handleExport = () => {
     if (!currentImage) return;
 
+    const mimeMatch = currentImage.match(/^data:image\/(\w+);/);
+    const ext = mimeMatch?.[1] === 'jpeg' ? 'jpg' : mimeMatch?.[1] || 'png';
+
     const link = document.createElement('a');
     link.href = currentImage;
-    link.download = `roomify-${id || 'design'}.png`;
+    link.download = `roomify-${id || 'design'}.${ext}`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -176,7 +179,7 @@ const VisualizerId = () => {
           <div className="compare-stage">
             {project?.sourceImage && currentImage ? (
               <ReactCompareSlider
-                defaultValue={50}
+                position={50}
                 style={{ width: '100%', height: 'auto' }}
                 itemOne={
                   <ReactCompareSliderImage
