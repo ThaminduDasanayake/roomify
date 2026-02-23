@@ -10,8 +10,6 @@ const VisualizerId = () => {
   const navigate = useNavigate();
   const { userId, userName } = useOutletContext<AuthContext>();
 
-  console.log(userName);
-
   const hasInitialGenerated = useRef(false);
 
   const [project, setProject] = useState<DesignItem | null>(null);
