@@ -22,6 +22,7 @@ interface DesignItem {
   publicPath?: string | null;
   timestamp: number;
   ownerId?: string | null;
+  ownerName?: string | null;
   sharedBy?: string | null;
   sharedAt?: string | null;
   isPublic?: boolean;

@@ -61,7 +61,11 @@ export default function Home() {
   useEffect(() => {
     const fetchProjects = async () => {
       const items = await getProjects();
+
+      setProjects(items);
     };
+
+    fetchProjects();
   }, []);
 
   return (
@@ -122,8 +126,12 @@ export default function Home() {
 
           <div className="projects-grid">
             {projects.map(
-              ({ id, name, renderedImage, sourceImage, timestamp, sharedBy, isPublic }) => (
-                <div key={id} className="project-card group">
+              ({ id, name, renderedImage, sourceImage, timestamp, ownerName, isPublic }) => (
+                <div
+                  key={id}
+                  className="project-card group"
+                  onClick={() => navigate(`/visualizer/${id}`)}
+                >
                   <div className="preview">
                     <img src={renderedImage || sourceImage} alt="Project" />
 
@@ -141,7 +149,7 @@ export default function Home() {
                       <div className="meta">
                         <Clock size={12} />
                         <span>{new Date(timestamp).toLocaleDateString()}</span>
-                        <span>{sharedBy || 'Unknown User'}</span>
+                        <span>{ownerName || 'Unknown User'}</span>
                       </div>
                     </div>
 
