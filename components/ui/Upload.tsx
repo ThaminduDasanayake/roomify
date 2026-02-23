@@ -1,7 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router';
 import { CheckCircle2, ImageIcon, UploadIcon } from 'lucide-react';
-import { PROGRESS_INCREMENT, PROGRESS_INTERVAL_MS, REDIRECT_DELAY_MS } from '../../lib/constants';
+import {
+  MAX_FILE_SIZE,
+  PROGRESS_INCREMENT,
+  PROGRESS_INTERVAL_MS,
+  REDIRECT_DELAY_MS,
+} from '../../lib/constants';
 
 interface UploadProps {
   onComplete?: (base64: string) => void;
@@ -11,6 +16,8 @@ const Upload = ({ onComplete }: UploadProps) => {
   const [file, setFile] = useState<File | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -33,16 +40,26 @@ const Upload = ({ onComplete }: UploadProps) => {
     (file: File) => {
       if (!isSignedIn) return;
 
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      if (timeoutRef.current) clearTimeout(timeoutRef.current);
+
+      if (file.size > MAX_FILE_SIZE) {
+        setError('File is too large. Please upload an image under 10MB.');
+        return;
+      }
+
+      setError(null);
       setFile(file);
       setProgress(0);
 
       const reader = new FileReader();
       reader.onerror = () => {
+        setError('Failed to read the file. Please try again.');
         setFile(null);
         setProgress(0);
       };
 
-      reader.onloadend = () => {
+      reader.onload = () => {
         const base64Data = reader.result as string;
 
         intervalRef.current = setInterval(() => {
@@ -90,6 +107,8 @@ const Upload = ({ onComplete }: UploadProps) => {
     const droppedFile = e.dataTransfer.files[0];
     if (droppedFile && allowedTypes.includes(droppedFile.type)) {
       processFile(droppedFile);
+    } else {
+      setError('Invalid file type. Please upload a JPG, PNG, or WEBP.');
     }
   };
 
@@ -98,6 +117,8 @@ const Upload = ({ onComplete }: UploadProps) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile && allowedTypes.includes(selectedFile.type)) {
       processFile(selectedFile);
+    } else {
+      setError('Invalid file type. Please upload a JPG, PNG, or WEBP.');
     }
   };
 
@@ -130,6 +151,8 @@ const Upload = ({ onComplete }: UploadProps) => {
             </p>
 
             <p className="help">Maximum file size 10MB.</p>
+
+            {error && <p className="text-red-500 text-xs font-semibold">{error}</p>}
           </div>
         </div>
       ) : (
