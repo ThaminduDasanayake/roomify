@@ -3,14 +3,19 @@ import Navbar from '../../components/Navbar';
 import { ArrowRight, ArrowUpRight, Clock, Layers } from 'lucide-react';
 import Button from '../../components/ui/Button';
 import Upload from '../../components/ui/Upload';
-import { useNavigate } from 'react-router';
+import { Link, useNavigate } from 'react-router';
 import { useEffect, useRef, useState } from 'react';
 import { createProject, getProjects } from '../../lib/puter.action';
 
 export function meta({}: Route.MetaArgs) {
   return [
-    { title: 'New React Router App' },
-    { name: 'description', content: 'Welcome to React Router!' },
+    { title: 'Roomify | Build Beautiful Spaces' },
+    {
+      name: 'description',
+      content:
+        'Roomify is an AI-first design environment that helps you visualize, render and ship architectural projects faster than ever.',
+    },
+    { name: 'keywords', content: 'architecture, floor plan, 3D render, AI design, visualization' },
   ];
 }
 
@@ -89,9 +94,9 @@ export default function Home() {
         </p>
 
         <div className="actions">
-          <a href="#upload" className="cta">
+          <Link to="#upload" className="cta">
             Start Building <ArrowRight className="icon" />
-          </a>
+          </Link>
 
           <Button variant="outline" className="demo">
             Watch Demo
