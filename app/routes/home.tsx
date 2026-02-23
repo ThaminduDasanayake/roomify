@@ -126,16 +126,7 @@ export default function Home() {
 
           <div className="projects-grid">
             {projects.map(
-              ({
-                id,
-                name,
-                renderedImage,
-                sourceImage,
-                timestamp,
-                ownerName,
-                sharedBy,
-                isPublic,
-              }) => (
+              ({ id, name, renderedImage, sourceImage, timestamp, ownerName, isPublic }) => (
                 <div
                   key={id}
                   className="project-card group"
