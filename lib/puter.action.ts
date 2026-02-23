@@ -19,8 +19,12 @@ export const createProject = async ({
   item,
   visibility = 'private',
 }: CreateProjectParams): Promise<DesignItem | null> => {
-  const projectId = item.id;
+  if (!PUTER_WORKER_URL) {
+    console.warn('Missing VITE_PUTER_WORKER_URL. Skip history fetch');
+    return null;
+  }
 
+  const projectId = item.id;
   const hosting = await getOrCreateHostingConfig();
 
   const hostedSource = projectId
@@ -65,7 +69,22 @@ export const createProject = async ({
   };
 
   try {
-    return payload;
+    const response = await puter.workers.exec(`${PUTER_WORKER_URL}/api/projects/save`, {
+      method: 'POST',
+      body: JSON.stringify({
+        project: payload,
+        visibility,
+      }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to save the project', await response.text());
+      return null;
+    }
+
+    const data = (await response.json()) as { project?: DesignItem | null };
+
+    return data?.project ?? null;
   } catch (error) {
     console.log('Failed to save project', error);
     return null;
@@ -94,5 +113,33 @@ export const getProjects = async () => {
   } catch (error) {
     console.error('Failed to get projects', error);
     return [];
+  }
+};
+
+export const getProjectById = async ({ id }: { id: string }) => {
+  if (!PUTER_WORKER_URL) {
+    console.warn('Missing VITE_PUTER_WORKER_URL; skipping project fetch.');
+    return null;
+  }
+
+  try {
+    const response = await puter.workers.exec(
+      `${PUTER_WORKER_URL}/api/projects/get?id=${encodeURIComponent(id)}`,
+      { method: 'GET' },
+    );
+
+    if (!response.ok) {
+      console.error('Failed to fetch project:', await response.text());
+      return null;
+    }
+
+    const data = (await response.json()) as {
+      project?: DesignItem | null;
+    };
+
+    return data?.project ?? null;
+  } catch (error) {
+    console.error('Failed to fetch project:', error);
+    return null;
   }
 };
